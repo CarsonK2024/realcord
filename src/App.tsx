@@ -93,8 +93,8 @@ function App() {
       console.log('App: Attempting to connect to server...');
       setConnectionStatus('connecting');
       
-      // Connect to the embedded server (same for both dev and prod since server is embedded)
-      const newSocket = io('http://localhost:3001', {
+      // Connect to the backend server
+      const newSocket = io('http://88.214.59.236:3001', {
         timeout: 10000,
         reconnection: true,
         reconnectionAttempts: 5,
