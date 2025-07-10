@@ -1,0 +1,19 @@
+@echo off
+echo Starting Discord Clone (Web Version)...
+echo.
+echo Starting backend server...
+start "Backend Server" cmd /k "cd server && npm start"
+echo Backend server started on http://localhost:3001
+echo.
+echo Waiting 3 seconds for backend to start...
+timeout /t 3 /nobreak >nul
+echo.
+echo Starting frontend server...
+start "Frontend Server" cmd /k "npm run dev"
+echo Frontend server will start on http://localhost:5173
+echo.
+echo Both servers are starting...
+echo Open http://localhost:5173 in your browser when ready!
+echo.
+echo Press any key to close this window...
+pause >nul 
