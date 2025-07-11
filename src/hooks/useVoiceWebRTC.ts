@@ -164,13 +164,16 @@ export function useVoiceWebRTC(props: UseVoiceWebRTCProps) {
       }
       // Handle remote stream
       pc.ontrack = (event) => {
+        console.log('Received remote track:', event.track, 'from peer:', peerId)
         let stream = remoteStreamsRef.current[peerId]
         if (!stream) {
           stream = new MediaStream()
           remoteStreamsRef.current[peerId] = stream
           playRemoteStream(stream, audioOutputId)
+          console.log('Created new remote MediaStream and audio element for peer:', peerId)
         }
         stream.addTrack(event.track)
+        console.log('Added track to remote stream for peer:', peerId, 'Track kind:', event.track.kind)
       }
       return pc
     }
