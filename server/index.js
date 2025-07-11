@@ -511,8 +511,59 @@ io.on('connection', (socket) => {
       socket.emit('friendsList', friendsList)
     }
     
+    // Send all DMs for this user
+    const userDMs = [];
+    for (const [conversationId, conversation] of conversations) {
+      if (conversation.participants.includes(username)) {
+        const dmHistory = directMessages.get(conversationId) || [];
+        userDMs.push({ conversationId, messages: dmHistory });
+      }
+    }
+    if (userDMs.length > 0) {
+      console.log(`Sending ${userDMs.length} DMs to ${username}`);
+      socket.emit('allDirectMessages', userDMs);
+    }
+    
     console.log(`${username} joined the chat`)
   })
+
+  // Handle explicit logout event
+  socket.on('logout', async () => {
+    const user = users.get(socket.id);
+    if (user) {
+      // Update user status to offline in persistent storage
+      const persistentUser = allUsers.get(user.uid);
+      if (persistentUser) {
+        persistentUser.status = 'offline';
+        persistentUser.lastSeen = new Date();
+      }
+      users.delete(socket.id);
+      // Update user status in Firestore (if available)
+      if (db) {
+        try {
+          await db.collection('users').doc(user.username).set({
+            status: 'offline',
+            lastSeen: admin.firestore.FieldValue.serverTimestamp()
+          }, { merge: true });
+          console.log(`Updated ${user.username} status to offline in Firestore (logout)`);
+        } catch (error) {
+          console.error('Error updating user status in Firestore:', error);
+        }
+      } else {
+        console.log(`User ${user.username} logged out (local tracking only)`);
+      }
+      // Notify others that user left
+      socket.broadcast.emit('userLeft', user.uid);
+      // Send updated user list (including offline users)
+      const userListForFrontend = Array.from(allUsers.values()).map(user => ({
+        id: user.uid,
+        username: user.username,
+        status: user.status
+      }));
+      io.emit('userList', userListForFrontend);
+      console.log(`${user.username} logged out`);
+    }
+  });
 
   // Handle new messages
   socket.on('message', async (data) => {
