@@ -100,18 +100,27 @@ export function useVoiceWebRTC(props: UseVoiceWebRTCProps) {
         localStream.getTracks().forEach(track => pc.addTrack(track, localStream))
       }
       if (type === 'offer') {
-        await pc.setRemoteDescription({ type: 'offer', sdp })
-        const answer = await pc.createAnswer()
-        await pc.setLocalDescription(answer)
-        socket.emit('voice-signal', {
-          to: from,
-          from: userId,
-          type: 'answer',
-          sdp: answer.sdp,
-          channelId
-        })
+        console.log('Before setRemoteDescription (offer):', pc.signalingState)
+        if (pc.signalingState === 'stable') {
+          await pc.setRemoteDescription({ type: 'offer', sdp })
+          const answer = await pc.createAnswer()
+          console.log('Before setLocalDescription (answer):', pc.signalingState)
+          if (pc.signalingState === 'have-remote-offer') {
+            await pc.setLocalDescription(answer)
+            socket.emit('voice-signal', {
+              to: from,
+              from: userId,
+              type: 'answer',
+              sdp: answer.sdp,
+              channelId
+            })
+          }
+        }
       } else if (type === 'answer') {
-        await pc.setRemoteDescription({ type: 'answer', sdp })
+        console.log('Before setRemoteDescription (answer):', pc.signalingState)
+        if (pc.signalingState === 'have-local-offer') {
+          await pc.setRemoteDescription({ type: 'answer', sdp })
+        }
       } else if (type === 'candidate' && candidate) {
         try {
           await pc.addIceCandidate(candidate)
