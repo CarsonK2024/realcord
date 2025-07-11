@@ -292,7 +292,9 @@ function App() {
         // Restore conversations
         const restoredConversations: Conversation[] = userDMs.map(dm => ({
           id: dm.conversationId,
-          participants: dm.messages.length > 0 ? Array.from(new Set(dm.messages.flatMap(m => [m.author, ...(m.conversationId ? [m.conversationId] : [])]))) : []
+          participants: dm.messages.length > 0
+            ? Array.from(new Set(dm.messages.map(m => m.author)))
+            : []
         }))
         setConversations(restoredConversations)
         // Optionally, restore messages for the first conversation
