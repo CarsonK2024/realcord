@@ -286,6 +286,22 @@ function App() {
         setMessages(data.messages)
       })
 
+      // Restore all DMs and conversations on login
+      newSocket.on('allDirectMessages', (userDMs: { conversationId: string, messages: Message[] }[]) => {
+        console.log('Restoring all DMs and conversations:', userDMs)
+        // Restore conversations
+        const restoredConversations: Conversation[] = userDMs.map(dm => ({
+          id: dm.conversationId,
+          participants: dm.messages.length > 0 ? Array.from(new Set(dm.messages.flatMap(m => [m.author, ...(m.conversationId ? [m.conversationId] : [])]))) : []
+        }))
+        setConversations(restoredConversations)
+        // Optionally, restore messages for the first conversation
+        if (userDMs.length > 0) {
+          setMessages(userDMs[0].messages)
+          setCurrentConversation(restoredConversations[0])
+        }
+      })
+
       // Friend system events
       newSocket.on('friendRequestSent', (data: { targetUsername: string }) => {
         console.log('Friend request sent to:', data.targetUsername)
