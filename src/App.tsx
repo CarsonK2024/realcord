@@ -333,6 +333,11 @@ function App() {
         console.log('New notification:', notification)
       })
 
+      // Always listen for friendsList event and update state
+      newSocket.on('friendsList', (friends: any[]) => {
+        setFriendsList(friends)
+      })
+
       return () => {
         newSocket.close()
       }

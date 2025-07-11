@@ -1307,6 +1307,23 @@ io.on('connection', (socket) => {
     // Save conversation to Firestore
     await saveConversationToFirestore(conversationId);
 
+    // After accepting a friend request (inside the relevant event handler):
+    const sendFriendsList = (userUid) => {
+      const userFriends = friends.get(userUid) || new Set();
+      const friendsList = Array.from(userFriends).map(friendId => {
+        const friend = Array.from(allUsers.values()).find(u => u.uid === friendId);
+        return friend ? { uid: friend.uid, username: friend.username, status: friend.status } : null;
+      }).filter(Boolean);
+      // Find the socket for this user
+      const userSocketId = Array.from(users.entries()).find(([_, u]) => u.uid === userUid)?.[0];
+      if (userSocketId) {
+        io.to(userSocketId).emit('friendsList', friendsList);
+      }
+    };
+    // Call sendFriendsList(user.uid) and sendFriendsList(fromId) after updating friends
+    sendFriendsList(user.uid);
+    sendFriendsList(fromId);
+
     console.log(`${user.username} ${accepted ? 'accepted' : 'declined'} friend request from ${request.fromUsername}`)
   })
 
