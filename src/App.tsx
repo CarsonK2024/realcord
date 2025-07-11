@@ -247,7 +247,11 @@ function App() {
       newSocket.on('voiceChannelJoined', (data: { channelId: string, username: string, serverId: string }) => {
         console.log('Voice channel joined:', data)
         if (data.serverId === currentServer?.id && data.channelId === currentChannel?.id) {
-          setVoiceParticipants(prev => [...prev, { id: Date.now().toString(), username: data.username }])
+          setVoiceParticipants(prev => {
+            // Only add if not already present
+            if (prev.some(p => p.username === data.username)) return prev;
+            return [...prev, { id: Date.now().toString(), username: data.username }];
+          });
         }
       })
 
