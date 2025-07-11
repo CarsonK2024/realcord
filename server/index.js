@@ -915,6 +915,16 @@ io.on('connection', (socket) => {
       }
       // Notify others in the channel (for UI presence)
       socket.to(channelId).emit('voiceChannelLeft', { channelId, username, serverId })
+      // Send updated participants list to all in the channel
+      if (voiceChannels.has(channelId)) {
+        const participants = Array.from(voiceChannels.get(channelId)).map(socketId => {
+          const participant = voiceParticipants.get(socketId)
+          return participant ? { id: socketId, username: participant.username } : null
+        }).filter(Boolean)
+        io.to(channelId).emit('voiceParticipants', participants)
+      } else {
+        io.to(channelId).emit('voiceParticipants', [])
+      }
       console.log(`${username} left voice channel ${channelId} in server ${serverId}`)
     }
   })
@@ -949,6 +959,16 @@ io.on('connection', (socket) => {
         
         // Notify others in the channel
         socket.to(channelId).emit('voiceChannelLeft', { channelId, username, serverId })
+        // Send updated participants list to all in the channel
+        if (voiceChannels.has(channelId)) {
+          const participants = Array.from(voiceChannels.get(channelId)).map(socketId => {
+            const participant = voiceParticipants.get(socketId)
+            return participant ? { id: socketId, username: participant.username } : null
+          }).filter(Boolean)
+          io.to(channelId).emit('voiceParticipants', participants)
+        } else {
+          io.to(channelId).emit('voiceParticipants', [])
+        }
         
         console.log(`${username} disconnected from voice channel ${channelId} in server ${serverId}`)
       }
