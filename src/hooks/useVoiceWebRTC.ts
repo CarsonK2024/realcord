@@ -104,14 +104,18 @@ export function useVoiceWebRTC(props: UseVoiceWebRTCProps) {
         if (pc.signalingState === 'stable') {
           await pc.setRemoteDescription({ type: 'offer', sdp })
           const answer = await pc.createAnswer()
-          await pc.setLocalDescription(answer)
-          socket.emit('voice-signal', {
-            to: from,
-            from: userId,
-            type: 'answer',
-            sdp: answer.sdp,
-            channelId
-          })
+          if (pc.signalingState === 'have-remote-offer') {
+            await pc.setLocalDescription(answer)
+            socket.emit('voice-signal', {
+              to: from,
+              from: userId,
+              type: 'answer',
+              sdp: answer.sdp,
+              channelId
+            })
+          } else {
+            console.warn('Not setting local description: signalingState is', pc.signalingState)
+          }
         }
       } else if (type === 'answer') {
         console.log('Before setRemoteDescription (answer):', pc.signalingState)
